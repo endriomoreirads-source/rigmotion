@@ -66,3 +66,28 @@ Corrija e responda SOMENTE com JSON válido para o rig ${normalizedRig}, duraç�
   finalErr.statusCode = 502;
   throw finalErr;
 }
+
+export async function generateVariationsWithAI({
+  prompt,
+  rig = 'R15',
+  duration = 1.2,
+  loop = false,
+  count = 3,
+}) {
+  const safeCount = Math.max(1, Math.min(3, Number(count) || 3));
+  const temperatures = [0.45, 0.65, 0.85].slice(0, safeCount);
+
+  const results = await Promise.all(
+    temperatures.map((temperature) =>
+      generateAnimationWithAI({
+        prompt,
+        rig,
+        duration,
+        loop,
+        temperature,
+      })
+    )
+  );
+
+  return results.map((r) => r.animation);
+}

@@ -1,10 +1,16 @@
 // Módulo generator (front-end): comunicação com o servidor para geração de animações.
 
-export async function generateAnimation({ prompt, rig = 'R15', duration = 1.2, loop = false }) {
+export async function generateVariations({
+  prompt,
+  rig = 'R15',
+  duration = 1.2,
+  loop = false,
+  count = 3,
+}) {
   const response = await fetch('/api/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, rig, duration, loop }),
+    body: JSON.stringify({ prompt, rig, duration, loop, count }),
   });
 
   const data = await response.json().catch(() => ({}));
@@ -13,5 +19,5 @@ export async function generateAnimation({ prompt, rig = 'R15', duration = 1.2, l
     throw new Error(data.error || `Erro ao gerar animação (HTTP ${response.status}).`);
   }
 
-  return data;
+  return data.variations || [data.animation];
 }

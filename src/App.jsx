@@ -1,17 +1,26 @@
 import { useEffect, useRef, useState } from 'react';
 import { RigPreview, TEST_ANIMATIONS } from './preview/index.js';
-import { RIG_TYPES } from './rig/index.js';
+import { generateVariations } from './generator/index.js';
+import { PromptPanel } from './ui/index.js';
 
 export default function App() {
   const [rigType, setRigType] = useState('R15');
+  const [prompt, setPrompt] = useState('');
+  const [durationInput, setDurationInput] = useState(1.2);
+  const [loop, setLoop] = useState(false);
+
+  const [variations, setVariations] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [animation, setAnimation] = useState(null);
+
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState('');
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [loop, setLoop] = useState(true);
 
   const lastTickRef = useRef(null);
-
-  const duration = animation?.duration || 1.2;
+  const activeDuration = animation?.duration || durationInput || 1.2;
 
   // Loop de reprodução da linha do tempo
   useEffect(() => {
@@ -30,12 +39,12 @@ export default function App() {
 
       setCurrentTime((prev) => {
         const next = prev + dt;
-        if (next >= duration) {
+        if (next >= activeDuration) {
           if (loop) {
-            return next % duration;
+            return next % activeDuration;
           }
           setIsPlaying(false);
-          return duration;
+          return activeDuration;
         }
         return next;
       });
@@ -45,7 +54,7 @@ export default function App() {
 
     frameId = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frameId);
-  }, [isPlaying, animation, duration, loop]);
+  }, [isPlaying, animation, activeDuration, loop]);
 
   function handleRigChange(nextRig) {
     setRigType(nextRig);
@@ -53,12 +62,47 @@ export default function App() {
     if (animation && animation.rig !== nextRig) {
       setIsPlaying(false);
       setAnimation(null);
+      setVariations([]);
       setCurrentTime(0);
     }
   }
 
+  async function handleGenerate() {
+    setError('');
+    setIsGenerating(true);
+    try {
+      const results = await generateVariations({
+        prompt,
+        rig: rigType,
+        duration: durationInput,
+        loop,
+        count: 3,
+      });
+
+      setVariations(results);
+      setSelectedIndex(0);
+      setAnimation(results[0]);
+      setCurrentTime(0);
+      setIsPlaying(true);
+    } catch (err) {
+      setError(err.message || 'Erro ao gerar animação.');
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
+  function handleSelectVariation(idx) {
+    const chosen = variations[idx];
+    if (!chosen) return;
+    setSelectedIndex(idx);
+    setAnimation(chosen);
+    setCurrentTime(0);
+    setIsPlaying(true);
+  }
+
   function handleRunTestAnimation() {
     const testAnim = TEST_ANIMATIONS[rigType];
+    setVariations([]);
     setAnimation(testAnim);
     setLoop(Boolean(testAnim.loop));
     setCurrentTime(0);
@@ -76,7 +120,7 @@ export default function App() {
       handleRunTestAnimation();
       return;
     }
-    if (!isPlaying && currentTime >= duration) {
+    if (!isPlaying && currentTime >= activeDuration) {
       setCurrentTime(0);
     }
     setIsPlaying((prev) => !prev);
@@ -84,7 +128,7 @@ export default function App() {
 
   function handleScrub(e) {
     setIsPlaying(false);
-    setCurrentTime( parseFloat(e.target.value) || 0 );
+    setCurrentTime(parseFloat(e.target.value) || 0);
   }
 
   return (
@@ -92,45 +136,50 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <h1>RigMotion</h1>
-          <span className="badge">Etapa 1 — Prévia 3D</span>
+          <span className="badge">Etapa 3 — Gerador IA</span>
         </div>
 
         <div className="topbar-controls">
-          <div className="rig-switcher" role="group" aria-label="Escolha do Rig">
-            {Object.values(RIG_TYPES).map((rig) => (
-              <button
-                key={rig.id}
-                type="button"
-                className={`btn-toggle ${rigType === rig.id ? 'active' : ''}`}
-                onClick={() => handleRigChange(rig.id)}
-              >
-                {rig.id}
-              </button>
-            ))}
-          </div>
-
-          <button type="button" className="btn-primary" onClick={handleRunTestAnimation}>
-            Rodar Animação de Teste ({rigType})
+          <button type="button" className="btn-secondary" onClick={handleRunTestAnimation}>
+            Animação de Teste ({rigType})
           </button>
-
           <button type="button" className="btn-secondary" onClick={handleResetPose}>
             Pose Neutra
           </button>
         </div>
       </header>
 
-      <main className="viewport-area">
-        <RigPreview rigType={rigType} animation={animation} currentTime={currentTime} />
+      <div className="workspace-body">
+        <PromptPanel
+          prompt={prompt}
+          onPromptChange={setPrompt}
+          rigType={rigType}
+          onRigChange={handleRigChange}
+          duration={durationInput}
+          onDurationChange={setDurationInput}
+          loop={loop}
+          onLoopChange={setLoop}
+          isGenerating={isGenerating}
+          error={error}
+          variations={variations}
+          selectedIndex={selectedIndex}
+          onSelectVariation={handleSelectVariation}
+          onGenerate={handleGenerate}
+        />
 
-        <div className="viewport-overlay">
-          <span>Rig: <strong>{rigType}</strong></span>
-          <span>•</span>
-          <span>
-            Animação: <strong>{animation ? animation.name : 'Pose Neutra'}</strong>
-          </span>
-          <span className="hint">Arraste para girar • Scroll para zoom • Botão direito para mover</span>
-        </div>
-      </main>
+        <main className="viewport-area">
+          <RigPreview rigType={rigType} animation={animation} currentTime={currentTime} />
+
+          <div className="viewport-overlay">
+            <span>Rig: <strong>{rigType}</strong></span>
+            <span>•</span>
+            <span>
+              Animação: <strong>{animation ? animation.name : 'Pose Neutra'}</strong>
+            </span>
+            <span className="hint">Arraste para girar • Scroll para zoom • Botão direito para mover</span>
+          </div>
+        </main>
+      </div>
 
       <footer className="timeline-bar">
         <button
@@ -146,16 +195,16 @@ export default function App() {
           type="range"
           className="timeline-slider"
           min={0}
-          max={duration}
+          max={activeDuration}
           step={0.01}
-          value={Math.min(currentTime, duration)}
+          value={Math.min(currentTime, activeDuration)}
           onChange={handleScrub}
           disabled={!animation}
           aria-label="Linha do tempo da animação"
         />
 
         <span className="time-readout">
-          {currentTime.toFixed(2)}s / {duration.toFixed(2)}s
+          {currentTime.toFixed(2)}s / {activeDuration.toFixed(2)}s
         </span>
 
         <label className="loop-toggle">
