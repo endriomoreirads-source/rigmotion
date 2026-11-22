@@ -69,7 +69,8 @@ export async function callAiModel({ systemPrompt, userPrompt, temperature = 0.6 
   }
 
   const data = await response.json();
-  const content = data?.choices?.[0]?.message?.content;
+  const message = data?.choices?.[0]?.message;
+  const content = message?.content || message?.reasoning_content;
 
   if (!content) {
     throw new Error('A API de IA não retornou conteúdo na resposta.');
