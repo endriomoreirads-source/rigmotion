@@ -1,3 +1,17 @@
-// Módulo generator: chamadas do front-end para as rotas /api/generate e /api/refine
-// (implementação na Etapa 2 e Etapa 4).
-export {};
+// Módulo generator (front-end): comunicação com o servidor para geração de animações.
+
+export async function generateAnimation({ prompt, rig = 'R15', duration = 1.2, loop = false }) {
+  const response = await fetch('/api/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, rig, duration, loop }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || !data.ok) {
+    throw new Error(data.error || `Erro ao gerar animação (HTTP ${response.status}).`);
+  }
+
+  return data;
+}
