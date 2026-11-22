@@ -1,0 +1,96 @@
+{
+  "name": "golpe_simples",
+  "rig": "R15",
+  "fps": 30,
+  "duration": 1.0,
+  "loop": false,
+  "keyframes": [
+    {
+      "time": 0.0,
+      "easing": "Linear",
+      "joints": {
+        "Root": [4, -15, 0],
+        "Waist": [5, -10, 0],
+        "Neck": [-4, 20, 0],
+        "RightShoulder": [25, -15, 20],
+        "RightElbow": [-80, 0, 0],
+        "LeftShoulder": [30, 20, -25],
+        "LeftElbow": [-95, 0, 0],
+        "LeftHip": [-15, 10, -6],
+        "LeftKnee": [20, 0, 0],
+        "RightHip": [14, -10, 6],
+        "RightKnee": [16, 0, 0]
+      }
+    },
+    {
+      "time": 0.3,
+      "easing": "CubicOut",
+      "joints": {
+        "Root": [6, -28, 4],
+        "Waist": [-8, -28, 6],
+        "Neck": [4, 38, 0],
+        "RightShoulder": [135, -20, 35],
+        "RightElbow": [-50, 0, 0],
+        "RightWrist": [-15, 0, 10],
+        "LeftShoulder": [40, 25, -35],
+        "LeftElbow": [-95, 0, 0],
+        "LeftHip": [-20, 12, -6],
+        "LeftKnee": [26, 0, 0],
+        "RightHip": [16, -10, 6],
+        "RightKnee": [22, 0, 0]
+      }
+    },
+    {
+      "time": 0.5,
+      "easing": "CubicIn",
+      "joints": {
+        "Root": [14, 32, -4],
+        "Waist": [20, 34, -8],
+        "Neck": [-8, -32, 0],
+        "RightShoulder": [-40, 35, -20],
+        "RightElbow": [-15, 0, 0],
+        "RightWrist": [18, 0, -10],
+        "LeftShoulder": [15, 10, -30],
+        "LeftElbow": [-90, 0, 0],
+        "LeftHip": [-26, -8, -4],
+        "LeftKnee": [34, 0, 0],
+        "RightHip": [22, 10, 6],
+        "RightKnee": [22, 0, 0]
+      }
+    },
+    {
+      "time": 0.72,
+      "easing": "CubicOut",
+      "joints": {
+        "Root": [10, 24, -2],
+        "Waist": [14, 22, -4],
+        "Neck": [-5, -24, 0],
+        "RightShoulder": [-48, 38, -24],
+        "RightElbow": [-25, 0, 0],
+        "LeftShoulder": [20, 15, -28],
+        "LeftElbow": [-92, 0, 0],
+        "LeftHip": [-20, -4, -5],
+        "LeftKnee": [26, 0, 0],
+        "RightHip": [16, 6, 6],
+        "RightKnee": [18, 0, 0]
+      }
+    },
+    {
+      "time": 1.0,
+      "easing": "CubicInOut",
+      "joints": {
+        "Root": [4, -15, 0],
+        "Waist": [5, -10, 0],
+        "Neck": [-4, 20, 0],
+        "RightShoulder": [25, -15, 20],
+        "RightElbow": [-80, 0, 0],
+        "LeftShoulder": [30, 20, -25],
+        "LeftElbow": [-95, 0, 0],
+        "LeftHip": [-15, 10, -6],
+        "LeftKnee": [20, 0, 0],
+        "RightHip": [14, -10, 6],
+        "RightKnee": [16, 0, 0]
+      }
+    }
+  ]
+}

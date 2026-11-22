@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { generateVariationsWithAI, refineAnimationWithAI } from './generator/index.js';
+import { generateMotionPlan, generateVariationsWithAI, refineAnimationWithAI } from './generator/index.js';
 import { getAiConfig } from './generator/aiClient.js';
 
 dotenv.config();
@@ -24,23 +24,45 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-// Etapa 2/3: Rota para gerar variações de animação a partir de texto usando IA
+// Etapa 1 da geração: Diretor de Movimento gera o plano em JSON
+app.post('/api/plan', async (req, res) => {
+  try {
+    const { prompt, rig = 'R15', duration = 1.2, loop = false } = req.body || {};
+    const result = await generateMotionPlan({ prompt, rig, duration, loop });
+    res.json({
+      ok: true,
+      plan: result.plan,
+      attempts: result.attempts,
+    });
+  } catch (err) {
+    const status = err.statusCode || 500;
+    console.error('[RigMotion /api/plan]', err.message);
+    res.status(status).json({
+      ok: false,
+      error: err.message || 'Erro ao gerar plano do Diretor de Movimento.',
+    });
+  }
+});
+
+// Etapa 2 da geração: Animador gera 3 variações usando o plano
 app.post('/api/generate', async (req, res) => {
   try {
-    const { prompt, rig = 'R15', duration = 1.2, loop = false, count = 3 } = req.body || {};
+    const { prompt, rig = 'R15', duration = 1.2, loop = false, plan = null, count = 3 } = req.body || {};
 
-    const variations = await generateVariationsWithAI({
+    const result = await generateVariationsWithAI({
       prompt,
       rig,
       duration,
       loop,
+      plan,
       count,
     });
 
     res.json({
       ok: true,
-      variations,
-      animation: variations[0],
+      plan: result.plan,
+      variations: result.variations,
+      animation: result.variations[0],
     });
   } catch (err) {
     const status = err.statusCode || 500;

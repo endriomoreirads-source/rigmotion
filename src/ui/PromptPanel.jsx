@@ -9,6 +9,10 @@ export default function PromptPanel({
   onDurationChange,
   loop,
   onLoopChange,
+  planText,
+  onPlanTextChange,
+  isPlanning,
+  onPlan,
   isGenerating,
   error,
   variations,
@@ -21,6 +25,8 @@ export default function PromptPanel({
   isRefining,
   onRefine,
 }) {
+  const busy = isPlanning || isGenerating || isRefining;
+
   function handleSubmit(e) {
     e.preventDefault();
     onGenerate();
@@ -33,11 +39,11 @@ export default function PromptPanel({
           <label htmlFor="prompt-input">Descreva o movimento</label>
           <textarea
             id="prompt-input"
-            rows={4}
+            rows={3}
             placeholder="Ex: ataque com espada e escudo, golpe diagonal de cima para baixo"
             value={prompt}
             onChange={(e) => onPromptChange(e.target.value)}
-            disabled={isGenerating}
+            disabled={busy}
           />
         </div>
 
@@ -51,7 +57,7 @@ export default function PromptPanel({
                   type="button"
                   className={`btn-toggle ${rigType === rig.id ? 'active' : ''}`}
                   onClick={() => onRigChange(rig.id)}
-                  disabled={isGenerating}
+                  disabled={busy}
                 >
                   {rig.id}
                 </button>
@@ -69,7 +75,7 @@ export default function PromptPanel({
               step={0.1}
               value={duration}
               onChange={(e) => onDurationChange(parseFloat(e.target.value) || 1.2)}
-              disabled={isGenerating}
+              disabled={busy}
             />
           </div>
         </div>
@@ -79,18 +85,53 @@ export default function PromptPanel({
             type="checkbox"
             checked={loop}
             onChange={(e) => onLoopChange(e.target.checked)}
-            disabled={isGenerating}
+            disabled={busy}
           />
           Animação em Loop
         </label>
 
-        <button
-          type="submit"
-          className="btn-primary btn-generate"
-          disabled={isGenerating || !prompt.trim()}
-        >
-          {isGenerating ? 'Gerando 3 variações...' : 'Gerar (3 variações)'}
-        </button>
+        <div className="action-row">
+          <button
+            type="button"
+            className="btn-secondary btn-plan"
+            onClick={onPlan}
+            disabled={busy || !prompt.trim()}
+          >
+            {isPlanning ? 'Planejando...' : '1. Planejar (Diretor)'}
+          </button>
+
+          <button
+            type="submit"
+            className="btn-primary btn-generate"
+            disabled={busy || !prompt.trim()}
+          >
+            {isGenerating ? 'Gerando...' : planText ? '2. Gerar (3 variações)' : 'Gerar (3 variações)'}
+          </button>
+        </div>
+
+        {planText && (
+          <div className="plan-section">
+            <div className="plan-header">
+              <span>Plano do Diretor (editável)</span>
+              <button
+                type="button"
+                className="btn-link"
+                onClick={() => onPlanTextChange('')}
+                disabled={busy}
+              >
+                Limpar
+              </button>
+            </div>
+            <textarea
+              className="plan-editor"
+              rows={8}
+              value={planText}
+              onChange={(e) => onPlanTextChange(e.target.value)}
+              disabled={busy}
+              spellCheck={false}
+            />
+          </div>
+        )}
 
         {error && (
           <div className="error-box" role="alert">
@@ -101,7 +142,7 @@ export default function PromptPanel({
 
       {variations.length > 0 && (
         <div className="variations-section">
-          <div className="variations-header">Variações geradas</div>
+          <div className="variations-header">Comparar variações geradas</div>
           <div className="variations-list">
             {variations.map((v, idx) => (
               <button
@@ -129,10 +170,10 @@ export default function PromptPanel({
             <input
               id="refine-input"
               type="text"
-              placeholder='Ex: "mais rápido", "braço direito mais alto"'
+              placeholder='Ex: "o braço gira demais", "mais rápido"'
               value={refineInstruction}
               onChange={(e) => onRefineInstructionChange(e.target.value)}
-              disabled={isRefining || isGenerating}
+              disabled={busy}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
@@ -144,9 +185,9 @@ export default function PromptPanel({
               type="button"
               className="btn-secondary btn-refine"
               onClick={onRefine}
-              disabled={isRefining || isGenerating || !refineInstruction.trim()}
+              disabled={busy || !refineInstruction.trim()}
             >
-              {isRefining ? 'Refinando...' : 'Refinar'}
+              {isRefining ? 'Corrigindo...' : 'Refinar'}
             </button>
           </div>
         </div>

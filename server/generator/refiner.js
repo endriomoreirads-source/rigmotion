@@ -4,10 +4,54 @@ import { extractJsonFromText, validateAndSanitizeAnimation } from './validator.j
 
 const MAX_RETRIES = 2;
 
+// Mescla um patch parcial de keyframes sobre a animação anterior
+function applyCorrectionPatch(previousAnimation, patch) {
+  if (!patch || typeof patch !== 'object') {
+    throw new Error('Correção retornada em formato inválido.');
+  }
+
+  // Se o modelo devolveu a animação completa, usa direto
+  if (Array.isArray(patch.keyframes) && patch.keyframes.length >= 2 && patch.name) {
+    return patch;
+  }
+
+  // Se devolveu apenas um objeto de correções por índice de keyframe (ex: { "updates": [ { "index": 1, "joints": {...} } ] })
+  const updated = JSON.parse(JSON.stringify(previousAnimation));
+
+  if (typeof patch.duration === 'number' && patch.duration >= 0.2) {
+    updated.duration = patch.duration;
+  }
+
+  if (Array.isArray(patch.updates)) {
+    for (const item of patch.updates) {
+      const idx = Number(item?.index);
+      if (Number.isInteger(idx) && idx >= 0 && idx < updated.keyframes.length) {
+        if (typeof item.time === 'number') updated.keyframes[idx].time = item.time;
+        if (typeof item.easing === 'string') updated.keyframes[idx].easing = item.easing;
+        if (item.joints && typeof item.joints === 'object') {
+          updated.keyframes[idx].joints = {
+            ...updated.keyframes[idx].joints,
+            ...item.joints,
+          };
+        }
+      }
+    }
+    return updated;
+  }
+
+  // Se devolveu apenas { "keyframes": [...] }
+  if (Array.isArray(patch.keyframes) && patch.keyframes.length >= 2) {
+    updated.keyframes = patch.keyframes;
+    return updated;
+  }
+
+  throw new Error('A correção não contém "updates" nem "keyframes" válidos.');
+}
+
 export async function refineAnimationWithAI({
   previousAnimation,
   instruction,
-  temperature = 0.5,
+  temperature = 0.45,
 }) {
   if (!previousAnimation || !Array.isArray(previousAnimation.keyframes)) {
     const err = new Error('Nenhuma animação prévia fornecida para refinamento.');
@@ -16,7 +60,7 @@ export async function refineAnimationWithAI({
   }
 
   if (!instruction || typeof instruction !== 'string' || !instruction.trim()) {
-    const err = new Error('Descreva o que deseja ajustar (ex: "mais rápido", "braço mais alto").');
+    const err = new Error('Descreva o problema que deseja corrigir (ex: "o braço gira demais").');
     err.statusCode = 400;
     throw err;
   }
@@ -24,14 +68,20 @@ export async function refineAnimationWithAI({
   const rig = previousAnimation.rig === 'R6' ? 'R6' : 'R15';
   const systemPrompt = buildSystemPrompt(rig);
 
-  let userPrompt = `Aqui está o JSON da animação atual:
+  let userPrompt = `ANIMAÇÃO ATUAL (JSON):
 ${JSON.stringify(previousAnimation, null, 2)}
 
-INSTRUÇÃO DE AJUSTE / REFINAMENTO:
+PROBLEMA RELATADO / AJUSTE DESEJADO:
 "${instruction.trim()}"
 
-Aplique esse ajuste mantendo a coerência da animação e dos eixos do rig ${rig}.
-Responda SOMENTE com o novo JSON completo e válido da animação atualizada.`;
+Devolva SOMENTE um JSON com a correção necessária no formato:
+{
+  "duration": ${previousAnimation.duration},
+  "updates": [
+    { "index": 0, "easing": "Linear", "joints": { "ArticulacaoAlterada": [rx, ry, rz] } }
+  ]
+}
+Inclua em "updates" apenas os índices dos keyframes e articulações que precisam ser corrigidos.`;
 
   let lastError = null;
 
@@ -43,11 +93,12 @@ Responda SOMENTE com o novo JSON completo e válido da animação atualizada.`;
         temperature,
       });
 
-      const parsed = extractJsonFromText(rawText);
+      const parsedPatch = extractJsonFromText(rawText);
+      const merged = applyCorrectionPatch(previousAnimation, parsedPatch);
       const animation = validateAndSanitizeAnimation(
-        parsed,
+        merged,
         rig,
-        previousAnimation.duration,
+        merged.duration,
         previousAnimation.loop
       );
 
@@ -60,8 +111,8 @@ Responda SOMENTE com o novo JSON completo e válido da animação atualizada.`;
       if (err.statusCode && err.statusCode >= 400 && err.statusCode < 500) {
         throw err;
       }
-      userPrompt = `Sua tentativa falhou na validação (${err.message}).
-Corrija e responda SOMENTE com o JSON válido atualizado para o rig ${rig}.`;
+      userPrompt = `Sua correção anterior falhou na validação (${err.message}).
+Responda SOMENTE com JSON válido contendo "updates" para corrigir o problema "${instruction.trim()}" no rig ${rig}.`;
     }
   }
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { RigPreview, TEST_ANIMATIONS } from './preview/index.js';
-import { generateVariations, refineAnimation } from './generator/index.js';
+import { generateMotionPlan, generateVariations, refineAnimation } from './generator/index.js';
 import { enhanceAnimationQuality } from './rig/index.js';
 import { PromptPanel } from './ui/index.js';
 
@@ -9,6 +9,9 @@ export default function App() {
   const [prompt, setPrompt] = useState('');
   const [durationInput, setDurationInput] = useState(1.2);
   const [loop, setLoop] = useState(false);
+
+  const [planText, setPlanText] = useState('');
+  const [isPlanning, setIsPlanning] = useState(false);
 
   const [variations, setVariations] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -26,7 +29,6 @@ export default function App() {
   const lastTickRef = useRef(null);
   const activeDuration = animation?.duration || durationInput || 1.2;
 
-  // Loop de reprodução da linha do tempo
   useEffect(() => {
     if (!isPlaying || !animation) {
       lastTickRef.current = null;
@@ -62,7 +64,6 @@ export default function App() {
 
   function handleRigChange(nextRig) {
     setRigType(nextRig);
-    // Uma animação não troca de rig depois de criada
     if (animation && animation.rig !== nextRig) {
       setIsPlaying(false);
       setAnimation(null);
@@ -71,17 +72,51 @@ export default function App() {
     }
   }
 
-  async function handleGenerate() {
+  async function handlePlan() {
     setError('');
-    setIsGenerating(true);
+    setIsPlanning(true);
     try {
-      const rawResults = await generateVariations({
+      const plan = await generateMotionPlan({
         prompt,
         rig: rigType,
         duration: durationInput,
         loop,
+      });
+      setPlanText(JSON.stringify(plan, null, 2));
+    } catch (err) {
+      setError(err.message || 'Erro ao planejar movimento.');
+    } finally {
+      setIsPlanning(false);
+    }
+  }
+
+  async function handleGenerate() {
+    setError('');
+    let parsedPlan = null;
+
+    if (planText.trim()) {
+      try {
+        parsedPlan = JSON.parse(planText);
+      } catch {
+        setError('O JSON do plano editado é inválido. Corrija ou clique em Limpar antes de gerar.');
+        return;
+      }
+    }
+
+    setIsGenerating(true);
+    try {
+      const { plan, variations: rawResults } = await generateVariations({
+        prompt,
+        rig: rigType,
+        duration: durationInput,
+        loop,
+        plan: parsedPlan,
         count: 3,
       });
+
+      if (plan && !planText.trim()) {
+        setPlanText(JSON.stringify(plan, null, 2));
+      }
 
       const enhancedResults = rawResults.map((v) => enhanceAnimationQuality(v));
 
@@ -109,7 +144,6 @@ export default function App() {
 
       const enhanced = enhanceAnimationQuality(refined);
 
-      // Atualiza a variação atual e o player
       setAnimation(enhanced);
       setVariations((prev) => {
         const next = [...prev];
@@ -171,7 +205,7 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <h1>RigMotion</h1>
-          <span className="badge">Etapa 4 — Qualidade & Refinamento</span>
+          <span className="badge">Etapa 4 — Qualidade & Diretor de Movimento</span>
         </div>
 
         <div className="topbar-controls">
@@ -194,6 +228,10 @@ export default function App() {
           onDurationChange={setDurationInput}
           loop={loop}
           onLoopChange={setLoop}
+          planText={planText}
+          onPlanTextChange={setPlanText}
+          isPlanning={isPlanning}
+          onPlan={handlePlan}
           isGenerating={isGenerating}
           error={error}
           variations={variations}

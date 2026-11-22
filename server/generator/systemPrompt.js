@@ -1,4 +1,48 @@
-// System prompt que ensina o rig (R15/R6), eixos, limites, easing e os 3 tempos de movimento.
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const EXAMPLES_DIR = path.resolve(__dirname, '../../exemplos');
+
+function loadExampleFile(filename) {
+  try {
+    const filePath = path.join(EXAMPLES_DIR, filename);
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function selectFewShotExamples(promptText = '') {
+  const lower = String(promptText).toLowerCase();
+  const chosen = [];
+
+  if (lower.includes('idle') || lower.includes('respir') || lower.includes('parado')) {
+    const ex = loadExampleFile('idle.json');
+    if (ex) chosen.push(ex);
+  }
+  if (lower.includes('escudo') || lower.includes('bloq') || lower.includes('defes') || lower.includes('parry')) {
+    const ex = loadExampleFile('bloqueio_escudo.json');
+    if (ex) chosen.push(ex);
+  }
+  if (chosen.length < 2) {
+    const golpe = loadExampleFile('golpe_simples.json');
+    if (golpe && !chosen.some((c) => c.name === golpe.name)) {
+      chosen.push(golpe);
+    }
+  }
+  if (chosen.length === 1) {
+    const idle = loadExampleFile('idle.json');
+    if (idle && !chosen.some((c) => c.name === idle.name)) {
+      chosen.push(idle);
+    }
+  }
+
+  return chosen.slice(0, 2);
+}
 
 const R15_PROMPT_INFO = `
 RIG R15 (15 articulações Motor6D):
@@ -29,11 +73,17 @@ RIG R6 (6 articulações Motor6D — atenção aos espaços nos nomes):
 - "Right Hip": X=[-120,80], Y=[-45,45], Z=[-30,60]
 `.trim();
 
-export function buildSystemPrompt(rigType = 'R15') {
+export function buildSystemPrompt(rigType = 'R15', promptText = '') {
   const rigInfo = rigType === 'R6' ? R6_PROMPT_INFO : R15_PROMPT_INFO;
+  const examples = selectFewShotExamples(promptText);
+  const examplesBlock = examples.length > 0
+    ? `\nEXEMPLOS DE REFERÊNCIA DE ALTA QUALIDADE (use como modelo de postura, base larga e ritmo):\n${examples
+        .map((ex, i) => `Exemplo ${i + 1} (${ex.name}):\n${JSON.stringify(ex)}`)
+        .join('\n\n')}\n`
+    : '';
 
-  return `Você é um animador técnico especialista em Roblox Studio (${rigType}).
-Sua tarefa é converter uma descrição de movimento em uma animação em keyframes JSON.
+  return `Você é o "Animador" especialista em Roblox Studio (${rigType}).
+Você recebe a descrição do movimento e o plano detalhado do Diretor de Movimento, e gera os keyframes exatos em JSON.
 
 REGRAS ESTRITAS DE SAÍDA:
 1. Responda SOMENTE com JSON válido. Não inclua markdown, crases (\`\`\`), explicações ou texto antes/depois.
@@ -64,90 +114,11 @@ SISTEMA DE COORDENADAS E EIXOS (graus Euler, relativos à pose neutra em pé):
 
 ${rigInfo}
 
-PRINCÍPIOS DE BIOMECÂNICA E COMBATE:
-- POSTURA BASE DE COMBATE (NÃO É T-POSE OU BONECO DURO):
-  * Em repouso ou início de ataque, as pernas devem estar levemente afastadas e flexionadas (joelhos com +10° a +20°, pernas com -Z e +Z suaves para base larga).
-  * O tronco (Waist) e a cabeça (Neck) nunca ficam estáticos: eles inclinam e giram na direção do golpe.
-  * O braço oposto (geralmente braço esquerdo em combate com escudo/guarda) se ergue para proteger o peito/rosto (ombro ~30-60°, cotovelo dobrado ~-60° a -90°).
-
-- OS 3 TEMPOS ESSENCIAIS DE UM GOLPE:
-  1. ANTECIPAÇÃO (20-30% da duração):
-     * Gire o Root e Waist no sentido OPOSTO ao golpe (-Y ou +Y).
-     * O braço de ataque sobe e recua para ganhar impulso. Use easing "CubicOut".
-  2. IMPACTO / CLÍMAX (45-60% da duração):
-     * O golpe desce/avança com força máxima. O quadril e o peito giram fortemente na direção do impacto.
-     * O braço estende rapidamente. Use easing "CubicIn".
-  3. RECUPERAÇÃO / GUÁRDA (80-100% da duração):
-     * Desacelera a inércia e retorna suavemente para uma pose de guarda estável. Use easing "CubicInOut".
-
-- EXEMPLO DE REFERÊNCIA REALISTA (SOCO DIRETO COM O BRAÇO DIREITO):
-{
-  "name": "soco_direto",
-  "rig": "R15",
-  "fps": 30,
-  "duration": 0.9,
-  "loop": false,
-  "keyframes": [
-    {
-      "time": 0.0,
-      "easing": "Linear",
-      "joints": {
-        "Root": [0, -10, 0],
-        "Waist": [0, -10, 0],
-        "RightShoulder": [15, -15, 20],
-        "RightElbow": [-90, 0, 0],
-        "LeftShoulder": [25, 20, -25],
-        "LeftElbow": [-100, 0, 0],
-        "LeftHip": [-15, 10, -5],
-        "LeftKnee": [20, 0, 0],
-        "RightHip": [15, -10, 5],
-        "RightKnee": [15, 0, 0]
-      }
-    },
-    {
-      "time": 0.25,
-      "easing": "CubicOut",
-      "joints": {
-        "Root": [5, -25, 0],
-        "Waist": [5, -30, 0],
-        "RightShoulder": [10, -35, 15],
-        "RightElbow": [-115, 0, 0],
-        "LeftShoulder": [30, 20, -30],
-        "LeftElbow": [-105, 0, 0]
-      }
-    },
-    {
-      "time": 0.48,
-      "easing": "CubicIn",
-      "joints": {
-        "Root": [12, 35, 0],
-        "Waist": [18, 40, -5],
-        "RightShoulder": [85, 25, 10],
-        "RightElbow": [-10, 0, 0],
-        "LeftShoulder": [20, 10, -35],
-        "LeftElbow": [-95, 0, 0]
-      }
-    },
-    {
-      "time": 0.9,
-      "easing": "CubicInOut",
-      "joints": {
-        "Root": [0, -10, 0],
-        "Waist": [0, -10, 0],
-        "RightShoulder": [15, -15, 20],
-        "RightElbow": [-90, 0, 0],
-        "LeftShoulder": [25, 20, -25],
-        "LeftElbow": [-100, 0, 0],
-        "LeftHip": [-15, 10, -5],
-        "LeftKnee": [20, 0, 0],
-        "RightHip": [15, -10, 5],
-        "RightKnee": [15, 0, 0]
-      }
-    }
-  ]
-}
-
-- Use entre 4 e 6 keyframes bem distribuídos no tempo para dar ritmo fluido e realista.
+PRINCÍPIOS DE QUALIDADE:
+- Siga rigorosamente as fases e durações do plano do Diretor de Movimento (antecipação mais lenta, impacto rápido).
+- Mantenha base larga nas pernas e joelhos semiflexionados para não parecer boneco rígido.
+- Nunca dê saltos angulares maiores que 180° entre keyframes consecutivos.
 - Valores de "easing" permitidos: "Linear", "Constant", "CubicIn", "CubicOut", "CubicInOut", "Bounce", "Elastic".
-- Garanta que o primeiro keyframe comece em time: 0.0 e o último termine exatamente em duration.`;
+- O primeiro keyframe deve começar em time: 0.0 e o último deve terminar exatamente em duration.
+${examplesBlock}`;
 }

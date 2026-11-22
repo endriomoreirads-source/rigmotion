@@ -1,0 +1,72 @@
+{
+  "name": "idle_combate",
+  "rig": "R15",
+  "fps": 30,
+  "duration": 2.0,
+  "loop": true,
+  "keyframes": [
+    {
+      "time": 0.0,
+      "easing": "CubicInOut",
+      "joints": {
+        "Root": [4, -15, 0],
+        "Waist": [6, -10, 0],
+        "Neck": [-4, 22, 0],
+        "RightShoulder": [25, -10, 22],
+        "RightElbow": [-85, 0, 0],
+        "RightWrist": [0, 0, 0],
+        "LeftShoulder": [32, 22, -25],
+        "LeftElbow": [-95, 0, 0],
+        "LeftWrist": [0, 0, 0],
+        "LeftHip": [-14, 10, -6],
+        "LeftKnee": [18, 0, 0],
+        "LeftAnkle": [-4, 0, 0],
+        "RightHip": [12, -10, 6],
+        "RightKnee": [16, 0, 0],
+        "RightAnkle": [-4, 0, 0]
+      }
+    },
+    {
+      "time": 1.0,
+      "easing": "CubicInOut",
+      "joints": {
+        "Root": [6, -15, 0],
+        "Waist": [10, -10, 0],
+        "Neck": [-6, 22, 0],
+        "RightShoulder": [30, -10, 24],
+        "RightElbow": [-92, 0, 0],
+        "RightWrist": [0, 0, 0],
+        "LeftShoulder": [38, 22, -26],
+        "LeftElbow": [-102, 0, 0],
+        "LeftWrist": [0, 0, 0],
+        "LeftHip": [-16, 10, -6],
+        "LeftKnee": [22, 0, 0],
+        "LeftAnkle": [-6, 0, 0],
+        "RightHip": [14, -10, 6],
+        "RightKnee": [20, 0, 0],
+        "RightAnkle": [-6, 0, 0]
+      }
+    },
+    {
+      "time": 2.0,
+      "easing": "CubicInOut",
+      "joints": {
+        "Root": [4, -15, 0],
+        "Waist": [6, -10, 0],
+        "Neck": [-4, 22, 0],
+        "RightShoulder": [25, -10, 22],
+        "RightElbow": [-85, 0, 0],
+        "RightWrist": [0, 0, 0],
+        "LeftShoulder": [32, 22, -25],
+        "LeftElbow": [-95, 0, 0],
+        "LeftWrist": [0, 0, 0],
+        "LeftHip": [-14, 10, -6],
+        "LeftKnee": [18, 0, 0],
+        "LeftAnkle": [-4, 0, 0],
+        "RightHip": [12, -10, 6],
+        "RightKnee": [16, 0, 0],
+        "RightAnkle": [-4, 0, 0]
+      }
+    }
+  ]
+}

@@ -26,13 +26,11 @@ export function extractJsonFromText(rawText) {
   }
 
   let cleaned = rawText.trim();
-  // Remove blocos markdown ```json ... ``` se o modelo ainda assim enviar
   const fenceMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
   if (fenceMatch) {
     cleaned = fenceMatch[1].trim();
   }
 
-  // Tenta localizar o primeiro '{' e o último '}'
   const firstBrace = cleaned.indexOf('{');
   const lastBrace = cleaned.lastIndexOf('}');
   if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
@@ -42,7 +40,77 @@ export function extractJsonFromText(rawText) {
   return JSON.parse(cleaned);
 }
 
-export function validateAndSanitizeAnimation(rawData, expectedRig = 'R15', requestedDuration = null, requestedLoop = null) {
+// Evita saltos bruscos > 180 graus escolhendo o menor caminho angular entre keyframes consecutivos
+function unwrapAndSmoothJumps(keyframes) {
+  for (let i = 1; i < keyframes.length; i++) {
+    const prevJoints = keyframes[i - 1].joints;
+    const currJoints = keyframes[i].joints;
+
+    for (const [jointName, rot] of Object.entries(currJoints)) {
+      const prevRot = prevJoints[jointName];
+      if (!prevRot) continue;
+
+      const limits = JOINT_LIMITS[jointName] || {
+        x: [-180, 180],
+        y: [-180, 180],
+        z: [-180, 180],
+      };
+      const axes = ['x', 'y', 'z'];
+
+      for (let axis = 0; axis < 3; axis++) {
+        let diff = rot[axis] - prevRot[axis];
+        if (Math.abs(diff) > 180) {
+          // Traz para o menor caminho angular (-180..180)
+          while (diff > 180) diff -= 360;
+          while (diff < -180) diff += 360;
+          const candidate = prevRot[axis] + diff;
+          const [minLim, maxLim] = limits[axes[axis]];
+          rot[axis] = Number(clamp(candidate, minLim, maxLim).toFixed(2));
+        }
+      }
+    }
+  }
+}
+
+// Impede que os pés atravessem o chão compensando a inclinação dos tornozelos e limitando flexão extrema
+function preventFloorPenetration(keyframes, rig) {
+  if (rig !== 'R15') return;
+
+  for (const kf of keyframes) {
+    const j = kf.joints;
+    if (j.LeftKnee) {
+      const kneeBend = Math.max(0, j.LeftKnee[0]);
+      const hipPitch = j.LeftHip ? j.LeftHip[0] : 0;
+      if (kneeBend > 5) {
+        const currentAnkle = j.LeftAnkle || [0, 0, 0];
+        j.LeftAnkle = [
+          Number(clamp(-kneeBend * 0.75 + hipPitch * 0.3, -45, 45).toFixed(2)),
+          currentAnkle[1],
+          currentAnkle[2],
+        ];
+      }
+    }
+    if (j.RightKnee) {
+      const rKneeBend = Math.max(0, j.RightKnee[0]);
+      const rHipPitch = j.RightHip ? j.RightHip[0] : 0;
+      if (rKneeBend > 5) {
+        const currentAnkle = j.RightAnkle || [0, 0, 0];
+        j.RightAnkle = [
+          Number(clamp(-rKneeBend * 0.75 + rHipPitch * 0.3, -45, 45).toFixed(2)),
+          currentAnkle[1],
+          currentAnkle[2],
+        ];
+      }
+    }
+  }
+}
+
+export function validateAndSanitizeAnimation(
+  rawData,
+  expectedRig = 'R15',
+  requestedDuration = null,
+  requestedLoop = null
+) {
   if (!rawData || typeof rawData !== 'object' || Array.isArray(rawData)) {
     throw new Error('O JSON retornado não é um objeto válido.');
   }
@@ -54,18 +122,14 @@ export function validateAndSanitizeAnimation(rawData, expectedRig = 'R15', reque
   const rig = expectedRig === 'R6' ? 'R6' : 'R15';
   const allowedJoints = new Set(getJointList(rig));
 
-  const duration = clamp(
-    toFiniteNumber(requestedDuration ?? rawData.duration, 1.2),
-    0.2,
-    10.0
+  const duration = Number(
+    clamp(toFiniteNumber(requestedDuration ?? rawData.duration, 1.2), 0.2, 10.0).toFixed(2)
   );
-
   const fps = clamp(Math.round(toFiniteNumber(rawData.fps, 30)), 15, 60);
   const loop = typeof requestedLoop === 'boolean' ? requestedLoop : Boolean(rawData.loop);
 
-  const rawName = typeof rawData.name === 'string' && rawData.name.trim()
-    ? rawData.name.trim()
-    : 'animacao_ia';
+  const rawName =
+    typeof rawData.name === 'string' && rawData.name.trim() ? rawData.name.trim() : 'animacao_ia';
   const name = rawName.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 48);
 
   const sanitizedKeyframes = [];
@@ -107,9 +171,30 @@ export function validateAndSanitizeAnimation(rawData, expectedRig = 'R15', reque
   }
 
   sanitizedKeyframes.sort((a, b) => a.time - b.time);
-
-  // Garante que o primeiro keyframe comece em 0.0
   sanitizedKeyframes[0].time = 0;
+
+  // Correções automáticas pós-geração:
+  // 1. Suaviza saltos bruscos > 180°
+  unwrapAndSmoothJumps(sanitizedKeyframes);
+
+  // 2. Evita pés atravessando o chão
+  preventFloorPenetration(sanitizedKeyframes, rig);
+
+  // 3. Se for loop, garante que a pose final retorne exatamente para a pose inicial
+  if (loop) {
+    const firstPose = JSON.parse(JSON.stringify(sanitizedKeyframes[0].joints));
+    const lastKf = sanitizedKeyframes[sanitizedKeyframes.length - 1];
+    if (Math.abs(lastKf.time - duration) < 0.05) {
+      lastKf.time = duration;
+      lastKf.joints = firstPose;
+    } else {
+      sanitizedKeyframes.push({
+        time: duration,
+        easing: 'CubicInOut',
+        joints: firstPose,
+      });
+    }
+  }
 
   return {
     name,
