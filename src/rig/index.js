@@ -1,3 +1,2 @@
-// Módulo rig: definições dos rigs R15 (15 articulações) e R6 (6 articulações),
-// hierarquia de Motor6D e limites realistas (implementação a partir da Etapa 1).
-export {};
+export { R15_JOINTS, R6_JOINTS, RIG_TYPES, JOINT_LIMITS, getJointList } from './definitions.js';
+export { applyRobloxEasing, evaluateAnimationAtTime } from './easing.js';

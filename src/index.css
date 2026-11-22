@@ -1,7 +1,7 @@
 :root {
   color-scheme: dark;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #0f1115;
+  background-color: #0b0e14;
   color: #e6e8ec;
 }
 
@@ -11,54 +11,194 @@
   padding: 0;
 }
 
-body {
-  min-height: 100vh;
+html,
+body,
+#root {
+  height: 100%;
 }
 
-.app-shell {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
 }
 
-.app-header {
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: #12161f;
+  border-bottom: 1px solid #232a38;
+  flex-wrap: wrap;
+}
+
+.brand {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
 }
 
-.app-header h1 {
-  font-size: 1.5rem;
+.brand h1 {
+  font-size: 1.25rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .badge {
   font-size: 0.75rem;
-  padding: 0.25rem 0.6rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 999px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #93c5fd;
+}
+
+.topbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.rig-switcher {
+  display: inline-flex;
+  background: #0b0e14;
+  border: 1px solid #262e3d;
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.btn-toggle {
+  background: transparent;
+  color: #94a3b8;
+  border: none;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-toggle.active {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-play {
+  border: none;
+  border-radius: 8px;
+  padding: 0.48rem 0.95rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-secondary {
   background: #1e2430;
+  color: #cbd5e1;
   border: 1px solid #2e3748;
-  color: #9ab0d9;
 }
 
-.app-placeholder {
-  padding: 1.5rem;
-  border-radius: 10px;
-  background: #161920;
-  border: 1px solid #262c38;
-  line-height: 1.6;
+.btn-secondary:hover {
+  background: #273042;
 }
 
-.muted {
-  margin-top: 0.5rem;
-  color: #9aa3b2;
-  font-size: 0.9rem;
+.viewport-area {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: #0b0e14;
 }
 
-code {
-  background: #1e2430;
-  padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-  font-size: 0.85em;
+.preview-canvas-container {
+  width: 100%;
+  height: 100%;
+}
+
+.viewport-overlay {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  backdrop-filter: blur(6px);
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  pointer-events: none;
+}
+
+.viewport-overlay .hint {
+  margin-left: 0.5rem;
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+
+.timeline-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.75rem 1.25rem;
+  background: #12161f;
+  border-top: 1px solid #232a38;
+}
+
+.btn-play {
+  min-width: 76px;
+  background: #10b981;
+  color: #042f2e;
+}
+
+.btn-play:hover {
+  background: #059669;
+  color: #ffffff;
+}
+
+.timeline-slider {
+  flex: 1;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}
+
+.timeline-slider:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.time-readout {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  min-width: 105px;
+  text-align: right;
+}
+
+.loop-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  cursor: pointer;
+  user-select: none;
 }
