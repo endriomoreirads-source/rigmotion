@@ -1,0 +1,27 @@
+{
+  "name": "rigmotion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "RigMotion - Gerador de animações R15/R6 para Roblox Studio com IA",
+  "scripts": {
+    "dev": "concurrently -n CLIENT,SERVER -c cyan,yellow \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "vite",
+    "dev:server": "node server/index.js",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "^0.172.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "vite": "^6.1.0"
+  }
+}
