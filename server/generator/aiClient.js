@@ -3,7 +3,7 @@
 export function getAiConfig() {
   const baseUrl = (process.env.AI_BASE_URL || 'https://integrate.api.nvidia.com/v1').replace(/\/+$/, '');
   const apiKey = process.env.AI_API_KEY || '';
-  const model = process.env.AI_MODEL || 'mistralai/mistral-large-4-1t-a52b';
+  const model = process.env.AI_MODEL || 'nvidia/nemotron-3.5-lightning-30b-a3b';
 
   return { baseUrl, apiKey, model };
 }
