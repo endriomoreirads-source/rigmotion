@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { generateVariationsWithAI } from './generator/index.js';
+import { generateVariationsWithAI, refineAnimationWithAI } from './generator/index.js';
 import { getAiConfig } from './generator/aiClient.js';
 
 dotenv.config();
@@ -48,6 +48,31 @@ app.post('/api/generate', async (req, res) => {
     res.status(status).json({
       ok: false,
       error: err.message || 'Erro interno ao gerar animação.',
+    });
+  }
+});
+
+// Etapa 4: Rota para refinar uma animação existente com instrução do usuário
+app.post('/api/refine', async (req, res) => {
+  try {
+    const { animation, instruction } = req.body || {};
+
+    const result = await refineAnimationWithAI({
+      previousAnimation: animation,
+      instruction,
+    });
+
+    res.json({
+      ok: true,
+      animation: result.animation,
+      attempts: result.attempts,
+    });
+  } catch (err) {
+    const status = err.statusCode || 500;
+    console.error('[RigMotion /api/refine]', err.message);
+    res.status(status).json({
+      ok: false,
+      error: err.message || 'Erro interno ao refinar animação.',
     });
   }
 });

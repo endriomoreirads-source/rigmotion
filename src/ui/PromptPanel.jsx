@@ -15,6 +15,11 @@ export default function PromptPanel({
   selectedIndex,
   onSelectVariation,
   onGenerate,
+  hasAnimation,
+  refineInstruction,
+  onRefineInstructionChange,
+  isRefining,
+  onRefine,
 }) {
   function handleSubmit(e) {
     e.preventDefault();
@@ -111,6 +116,38 @@ export default function PromptPanel({
                 </span>
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {hasAnimation && (
+        <div className="refine-section">
+          <label htmlFor="refine-input" className="refine-label">
+            Refinar Animação Atual
+          </label>
+          <div className="refine-input-row">
+            <input
+              id="refine-input"
+              type="text"
+              placeholder='Ex: "mais rápido", "braço direito mais alto"'
+              value={refineInstruction}
+              onChange={(e) => onRefineInstructionChange(e.target.value)}
+              disabled={isRefining || isGenerating}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  onRefine();
+                }
+              }}
+            />
+            <button
+              type="button"
+              className="btn-secondary btn-refine"
+              onClick={onRefine}
+              disabled={isRefining || isGenerating || !refineInstruction.trim()}
+            >
+              {isRefining ? 'Refinando...' : 'Refinar'}
+            </button>
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { RigPreview, TEST_ANIMATIONS } from './preview/index.js';
-import { generateVariations } from './generator/index.js';
+import { generateVariations, refineAnimation } from './generator/index.js';
+import { enhanceAnimationQuality } from './rig/index.js';
 import { PromptPanel } from './ui/index.js';
 
 export default function App() {
@@ -12,6 +13,9 @@ export default function App() {
   const [variations, setVariations] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [animation, setAnimation] = useState(null);
+
+  const [refineInstruction, setRefineInstruction] = useState('');
+  const [isRefining, setIsRefining] = useState(false);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
@@ -71,7 +75,7 @@ export default function App() {
     setError('');
     setIsGenerating(true);
     try {
-      const results = await generateVariations({
+      const rawResults = await generateVariations({
         prompt,
         rig: rigType,
         duration: durationInput,
@@ -79,15 +83,46 @@ export default function App() {
         count: 3,
       });
 
-      setVariations(results);
+      const enhancedResults = rawResults.map((v) => enhanceAnimationQuality(v));
+
+      setVariations(enhancedResults);
       setSelectedIndex(0);
-      setAnimation(results[0]);
+      setAnimation(enhancedResults[0]);
       setCurrentTime(0);
       setIsPlaying(true);
     } catch (err) {
       setError(err.message || 'Erro ao gerar animação.');
     } finally {
       setIsGenerating(false);
+    }
+  }
+
+  async function handleRefine() {
+    if (!animation || !refineInstruction.trim()) return;
+    setError('');
+    setIsRefining(true);
+    try {
+      const refined = await refineAnimation({
+        animation,
+        instruction: refineInstruction,
+      });
+
+      const enhanced = enhanceAnimationQuality(refined);
+
+      // Atualiza a variação atual e o player
+      setAnimation(enhanced);
+      setVariations((prev) => {
+        const next = [...prev];
+        next[selectedIndex] = enhanced;
+        return next;
+      });
+      setRefineInstruction('');
+      setCurrentTime(0);
+      setIsPlaying(true);
+    } catch (err) {
+      setError(err.message || 'Erro ao refinar animação.');
+    } finally {
+      setIsRefining(false);
     }
   }
 
@@ -101,7 +136,7 @@ export default function App() {
   }
 
   function handleRunTestAnimation() {
-    const testAnim = TEST_ANIMATIONS[rigType];
+    const testAnim = enhanceAnimationQuality(TEST_ANIMATIONS[rigType]);
     setVariations([]);
     setAnimation(testAnim);
     setLoop(Boolean(testAnim.loop));
@@ -136,7 +171,7 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <h1>RigMotion</h1>
-          <span className="badge">Etapa 3 — Gerador IA</span>
+          <span className="badge">Etapa 4 — Qualidade & Refinamento</span>
         </div>
 
         <div className="topbar-controls">
@@ -165,6 +200,11 @@ export default function App() {
           selectedIndex={selectedIndex}
           onSelectVariation={handleSelectVariation}
           onGenerate={handleGenerate}
+          hasAnimation={Boolean(animation)}
+          refineInstruction={refineInstruction}
+          onRefineInstructionChange={setRefineInstruction}
+          isRefining={isRefining}
+          onRefine={handleRefine}
         />
 
         <main className="viewport-area">

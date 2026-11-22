@@ -64,12 +64,23 @@ SISTEMA DE COORDENADAS E EIXOS (graus Euler, relativos à pose neutra em pé):
 
 ${rigInfo}
 
-PRINCÍPIOS DE ANIMAÇÃO (PESO E TIMING):
-- Todo golpe ou ação forte deve ter 3 tempos claros:
-  1. Antecipação (~20-30% do tempo): prepara o corpo, gira tronco/quadril no sentido oposto, recua o braço. Use easing "CubicOut".
-  2. Impacto (~45-60% do tempo): movimento rápido e decisivo até o ponto de contato, transferindo peso. Use easing "CubicIn" ou "Linear".
-  3. Recuperação (~75-100% do tempo): desacelera, estabiliza e retorna à guarda ou pose inicial. Use easing "CubicInOut" ou "CubicOut".
-- Envolva o corpo inteiro (quadril, tronco, cabeça, pernas e braço oposto para equilíbrio), nunca apenas um braço isolado.
+PRINCÍPIOS DE BIOMECÂNICA E COMBATE:
+- POSTURA BASE DE COMBATE (NÃO É T-POSE OU BONECO DURO):
+  * Em repouso ou início de ataque, as pernas devem estar levemente afastadas e flexionadas (joelhos com +10° a +20°, pernas com -Z e +Z suaves para base larga).
+  * O tronco (Waist) e a cabeça (Neck) nunca ficam estáticos: eles inclinam e giram na direção do golpe.
+  * O braço oposto (geralmente braço esquerdo em combate com escudo/guarda) se ergue para proteger o peito/rosto (ombro ~30-60°, cotovelo dobrado ~-60° a -90°).
+
+- OS 3 TEMPOS ESSENCIAIS DE UM GOLPE:
+  1. ANTECIPAÇÃO (20-30% da duração):
+     * Gire o Root e Waist no sentido OPOSTO ao golpe (-Y ou +Y).
+     * O braço de ataque sobe e recua para ganhar impulso. Use easing "CubicOut".
+  2. IMPACTO / CLÍMAX (45-60% da duração):
+     * O golpe desce/avança com força máxima. O quadril e o peito giram fortemente na direção do impacto.
+     * O braço estende rapidamente. Use easing "CubicIn".
+  3. RECUPERAÇÃO / GUÁRDA (80-100% da duração):
+     * Desacelera a inércia e retorna suavemente para uma pose de guarda estável. Use easing "CubicInOut".
+
+- Use entre 4 e 6 keyframes bem distribuídos no tempo para dar ritmo fluido e realista.
 - Valores de "easing" permitidos: "Linear", "Constant", "CubicIn", "CubicOut", "CubicInOut", "Bounce", "Elastic".
 - Garanta que o primeiro keyframe comece em time: 0.0 e o último termine exatamente em duration.`;
 }

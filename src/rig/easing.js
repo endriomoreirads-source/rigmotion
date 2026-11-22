@@ -1,5 +1,4 @@
-// Funções de easing compatíveis com o estilo do Roblox (Enum.PoseEasingStyle / PoseEasingDirection)
-// Suporta: Linear, Constant, Cubic, CubicIn, CubicOut, CubicInOut, Bounce, Elastic
+import { applyFootGrounding } from './postProcessing.js';
 
 function cubicIn(t) {
   return t * t * t;
@@ -122,5 +121,5 @@ export function evaluateAnimationAtTime(animation, time) {
     ];
   }
 
-  return result;
+  return applyFootGrounding(result, animation.rig);
 }

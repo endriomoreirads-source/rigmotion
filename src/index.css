@@ -256,6 +256,49 @@ body,
   color: #94a3b8;
 }
 
+.refine-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  background: #0b0e14;
+  border: 1px solid #232a38;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.refine-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #93c5fd;
+}
+
+.refine-input-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.refine-input-row input {
+  flex: 1;
+  background: #12161f;
+  border: 1px solid #262e3d;
+  border-radius: 6px;
+  color: #e6e8ec;
+  padding: 0.45rem 0.65rem;
+  font-family: inherit;
+  font-size: 0.82rem;
+}
+
+.refine-input-row input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.btn-refine {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
 .draft-notice {
   margin-top: auto;
   font-size: 0.78rem;

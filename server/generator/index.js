@@ -91,3 +91,6 @@ export async function generateVariationsWithAI({
 
   return results.map((r) => r.animation);
 }
+
+export { refineAnimationWithAI } from './refiner.js';
+

@@ -21,3 +21,19 @@ export async function generateVariations({
 
   return data.variations || [data.animation];
 }
+
+export async function refineAnimation({ animation, instruction }) {
+  const response = await fetch('/api/refine', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ animation, instruction }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok || !data.ok) {
+    throw new Error(data.error || `Erro ao refinar animação (HTTP ${response.status}).`);
+  }
+
+  return data.animation;
+}
