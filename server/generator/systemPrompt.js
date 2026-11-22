@@ -80,6 +80,73 @@ PRINCÍPIOS DE BIOMECÂNICA E COMBATE:
   3. RECUPERAÇÃO / GUÁRDA (80-100% da duração):
      * Desacelera a inércia e retorna suavemente para uma pose de guarda estável. Use easing "CubicInOut".
 
+- EXEMPLO DE REFERÊNCIA REALISTA (SOCO DIRETO COM O BRAÇO DIREITO):
+{
+  "name": "soco_direto",
+  "rig": "R15",
+  "fps": 30,
+  "duration": 0.9,
+  "loop": false,
+  "keyframes": [
+    {
+      "time": 0.0,
+      "easing": "Linear",
+      "joints": {
+        "Root": [0, -10, 0],
+        "Waist": [0, -10, 0],
+        "RightShoulder": [15, -15, 20],
+        "RightElbow": [-90, 0, 0],
+        "LeftShoulder": [25, 20, -25],
+        "LeftElbow": [-100, 0, 0],
+        "LeftHip": [-15, 10, -5],
+        "LeftKnee": [20, 0, 0],
+        "RightHip": [15, -10, 5],
+        "RightKnee": [15, 0, 0]
+      }
+    },
+    {
+      "time": 0.25,
+      "easing": "CubicOut",
+      "joints": {
+        "Root": [5, -25, 0],
+        "Waist": [5, -30, 0],
+        "RightShoulder": [10, -35, 15],
+        "RightElbow": [-115, 0, 0],
+        "LeftShoulder": [30, 20, -30],
+        "LeftElbow": [-105, 0, 0]
+      }
+    },
+    {
+      "time": 0.48,
+      "easing": "CubicIn",
+      "joints": {
+        "Root": [12, 35, 0],
+        "Waist": [18, 40, -5],
+        "RightShoulder": [85, 25, 10],
+        "RightElbow": [-10, 0, 0],
+        "LeftShoulder": [20, 10, -35],
+        "LeftElbow": [-95, 0, 0]
+      }
+    },
+    {
+      "time": 0.9,
+      "easing": "CubicInOut",
+      "joints": {
+        "Root": [0, -10, 0],
+        "Waist": [0, -10, 0],
+        "RightShoulder": [15, -15, 20],
+        "RightElbow": [-90, 0, 0],
+        "LeftShoulder": [25, 20, -25],
+        "LeftElbow": [-100, 0, 0],
+        "LeftHip": [-15, 10, -5],
+        "LeftKnee": [20, 0, 0],
+        "RightHip": [15, -10, 5],
+        "RightKnee": [15, 0, 0]
+      }
+    }
+  ]
+}
+
 - Use entre 4 e 6 keyframes bem distribuídos no tempo para dar ritmo fluido e realista.
 - Valores de "easing" permitidos: "Linear", "Constant", "CubicIn", "CubicOut", "CubicInOut", "Bounce", "Elastic".
 - Garanta que o primeiro keyframe comece em time: 0.0 e o último termine exatamente em duration.`;

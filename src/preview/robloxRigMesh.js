@@ -185,6 +185,8 @@ export function buildR6Rig() {
 }
 
 function createRigController(group, joints) {
+  const initialRootY = joints.Root ? joints.Root.position.y : (joints.RootJoint ? joints.RootJoint.position.y : 2.5);
+
   function applyPose(poseMap = {}) {
     for (const [name, pivot] of Object.entries(joints)) {
       const rot = poseMap[name];
@@ -197,6 +199,17 @@ function createRigController(group, joints) {
       } else {
         pivot.rotation.set(0, 0, 0);
       }
+    }
+
+    // Mantém o centro do corpo sempre na altura correta do chão
+    const mainRoot = joints.Root || joints.RootJoint;
+    if (mainRoot) {
+      // Ajusta queda do centro de massa quando as pernas flexionam
+      const lKnee = poseMap.LeftKnee ? poseMap.LeftKnee[0] || 0 : 0;
+      const rKnee = poseMap.RightKnee ? poseMap.RightKnee[0] || 0 : 0;
+      const maxBend = Math.max(0, lKnee, rKnee);
+      const crouchDrop = (maxBend / 90) * 0.45;
+      mainRoot.position.y = initialRootY - crouchDrop;
     }
   }
 
